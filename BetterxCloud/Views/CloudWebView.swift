@@ -24,14 +24,18 @@ struct CloudWebView: UIViewRepresentable {
         // 1. Inject Better xCloud UserScript
         if let scriptPath = Bundle.main.path(forResource: "better-xcloud.user", ofType: "js"),
            let scriptSource = try? String(contentsOfFile: scriptPath) {
-            let userScript = WKUserScript(source: scriptSource, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
+            let userScript = WKUserScript(source: scriptSource, injectionTime: .atDocumentStart, forMainFrameOnly: true)
             userContentController.addUserScript(userScript)
         }
         
-        // 2. CSS to prevent zooming, text selection and allow full screen feel
+        // 2. CSS and Viewport to fix fullscreen cut-offs and disable zooming
         let cssString = """
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+        document.head.appendChild(meta);
         var style = document.createElement('style');
-        style.innerHTML = 'body { -webkit-user-select: none; user-select: none; touch-action: none; overscroll-behavior: none; }';
+        style.innerHTML = 'body { -webkit-user-select: none; user-select: none; touch-action: none; overscroll-behavior: none; background-color: black !important; }';
         document.head.appendChild(style);
         """
         let cssScript = WKUserScript(source: cssString, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
@@ -39,6 +43,7 @@ struct CloudWebView: UIViewRepresentable {
         
         // 3. Prepare AppInterface for the userscript bridge
         let bridgeScript = """
+        window.BX_FLAGS = { SafariWorkaround: false };
         window.AppInterface = {
             vibrate: function(data, intensity) {
                 window.webkit.messageHandlers.AppInterface.postMessage({type: 'vibrate', data: data, intensity: intensity});
@@ -48,10 +53,15 @@ struct CloudWebView: UIViewRepresentable {
             },
             closeApp: function() {
                 window.webkit.messageHandlers.AppInterface.postMessage({type: 'closeApp'});
-            }
+            },
+            getLanguage: function() { return navigator.language || "en-US"; },
+            getVersionName: function() { return "1.0.0"; },
+            getVersionCode: function() { return 1; },
+            getDeviceName: function() { return "iOS Device"; },
+            clearAppCache: function() { }
         };
         """
-        let interfaceScript = WKUserScript(source: bridgeScript, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+        let interfaceScript = WKUserScript(source: bridgeScript, injectionTime: .atDocumentStart, forMainFrameOnly: true)
         userContentController.addUserScript(interfaceScript)
         
         context.coordinator.messageHandler.delegate = context.coordinator
@@ -60,6 +70,10 @@ struct CloudWebView: UIViewRepresentable {
         configuration.userContentController = userContentController
         
         let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.backgroundColor = .black
+        webView.isOpaque = false
+        webView.scrollView.backgroundColor = .black
+        webView.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15"
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.scrollView.showsVerticalScrollIndicator = false
