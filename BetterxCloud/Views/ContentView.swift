@@ -17,6 +17,14 @@ struct ContentView: View {
         // Auto-hide home indicator for immersive full screen
         .modifier(HideHomeIndicatorModifier())
         .preferredColorScheme(.dark)
+        .onAppear {
+            // Failsafe: hide splash screen after 8 seconds no matter what
+            DispatchQueue.main.asyncAfter(deadline: .now() + 8.0) {
+                if !isLoaded {
+                    withAnimation { isLoaded = true }
+                }
+            }
+        }
     }
 }
 
