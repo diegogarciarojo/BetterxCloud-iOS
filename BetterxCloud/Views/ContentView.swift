@@ -15,8 +15,18 @@ struct ContentView: View {
             }
         }
         // Auto-hide home indicator for immersive full screen
-        .persistentSystemOverlays(.hidden)
+        .modifier(HideHomeIndicatorModifier())
         .preferredColorScheme(.dark)
+    }
+}
+
+struct HideHomeIndicatorModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.persistentSystemOverlays(.hidden)
+        } else {
+            content
+        }
     }
 }
 
