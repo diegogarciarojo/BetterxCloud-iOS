@@ -5,24 +5,22 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
+            Color.black.edgesIgnoringSafeArea(.all)
+            
             CloudWebView(isLoaded: $isLoaded)
                 .edgesIgnoringSafeArea(.all)
             
-            if !isLoaded {
-                LaunchScreenView()
-                    .transition(.opacity)
-                    .zIndex(1)
-            }
+            LaunchScreenView()
+                .opacity(isLoaded ? 0 : 1)
+                .allowsHitTesting(!isLoaded)
+                .animation(.easeInOut(duration: 0.4), value: isLoaded)
+                .zIndex(1)
         }
-        // Auto-hide home indicator for immersive full screen
         .modifier(HideHomeIndicatorModifier())
         .preferredColorScheme(.dark)
         .onAppear {
-            // Failsafe: hide splash screen after 8 seconds no matter what
             DispatchQueue.main.asyncAfter(deadline: .now() + 8.0) {
-                if !isLoaded {
-                    withAnimation { isLoaded = true }
-                }
+                if !isLoaded { isLoaded = true }
             }
         }
     }
@@ -41,18 +39,15 @@ struct HideHomeIndicatorModifier: ViewModifier {
 struct LaunchScreenView: View {
     var body: some View {
         ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
-            VStack {
+            Color(white: 0.05).edgesIgnoringSafeArea(.all)
+            VStack(spacing: 30) {
                 Image(systemName: "gamecontroller.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 80, height: 80)
-                    .foregroundColor(.green)
-                Text("Better xCloud")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .padding(.top, 16)
+                    .font(.system(size: 80))
+                    .foregroundColor(Color(red: 0.06, green: 0.80, blue: 0.06))
+                    .shadow(color: Color(red: 0.06, green: 0.80, blue: 0.06).opacity(0.4), radius: 20, x: 0, y: 0)
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .scaleEffect(1.5)
             }
         }
     }
