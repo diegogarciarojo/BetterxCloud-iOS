@@ -1,0 +1,19 @@
+name: BetterxCloud
+options:
+  bundleIdPrefix: com.betterxcloud
+targets:
+  BetterxCloud:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - BetterxCloud
+    info:
+      path: BetterxCloud/Info.plist
+      properties:
+        UIRequiresFullScreen: true
+        UIStatusBarHidden: true
+    settings:
+      base:
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "To save screenshots of gameplay directly to Photos"
+        TARGETED_DEVICE_FAMILY: "1,2" # iPhone, iPad
